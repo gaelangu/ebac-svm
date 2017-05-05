@@ -1,0 +1,81 @@
+---
+title: "ci1_ca2"
+author: "Gaelan Gu"
+date: "04/05/2017"
+output: html_document
+---
+
+# Support Vector Machines - Continuous Assessment
+
+## Data & Package Imports
+```{r}
+library(ISLR)
+library(e1071)
+library(caret)
+library(caTools)
+data(Default)
+summary(Default)
+```
+
+## Train-Test Split
+```{r}
+set.seed(111)
+split = sample.split(Default$default, SplitRatio = 0.8)
+
+train = subset(Default, split == T)
+test = subset(Default, split == F)
+
+# train and test sets with balance and income only
+train_bi = train[, c('default', 'balance', 'income')]
+test_bi = test[, c('default', 'balance', 'income')]
+```
+
+## Fitting Train Set with SVM with *Radial* Kernel
+```{r}
+svm_bi1 = svm(default ~ .,
+           data = train_bi,
+           kernel = 'radial',
+           gamma = 1,
+           cost = 1)
+
+summary(svm_bi1)
+```
+
+```{r}
+# Tuning of SVM Kernel
+set.seed(111)
+
+tune_out_bi1 = tune(svm,
+                 default ~ .,
+                 data = train_bi,
+                 kernel = 'radial',
+                 ranges = list(cost = c(0.1, 1, 10, 100, 1000),
+                               gamma = c(0.5, 1, 2, 3, 4)))
+
+summary(tune_out_bi1)
+```
+
+Best parameters are cost = 100 and gamma = 1.
+
+```{r}
+bestmod_bi1 = tune_out_bi1$best.model
+summary(bestmod_bi1)
+```
+
+## Confusion Matrices
+```{r}
+# CM on Training Set
+newpred_bi_train1 = predict(bestmod_bi1, train_bi)
+confusionMatrix(table(prediction = newpred_bi_train1,
+                      actual = train_bi$default))
+```
+97.4% accuracy on training set achieved.
+
+```{r}
+# CM on Test Set
+newpred_bi_test1 = predict(bestmod_bi1, test_bi)
+confusionMatrix(table(prediction = newpred_bi_test1,
+                      actual = test_bi$default))
+```
+
+97.1% accuracy on test set achieved.
