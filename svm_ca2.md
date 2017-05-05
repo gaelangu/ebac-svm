@@ -1,4 +1,4 @@
-\# KE5206 | Computational Intelligence I CA2
+KE5206 | Computational Intelligence I CA2
 --------------------------------------------
 
 *Support Vector Machines*
