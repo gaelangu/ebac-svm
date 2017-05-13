@@ -2,9 +2,7 @@
 title: "ci1_ca2"
 author: "Gaelan Gu"
 date: "04/05/2017"
-output:
-  md_document:
-    variant: markdown_github
+output: word_document
 ---
 
 # KE5206 | Computational Intelligence I CA2
@@ -45,15 +43,19 @@ test_bi = test[, c('default', 'balance', 'income')]
 # train and test sets with student and balance only
 train_bs = train[, c('default', 'balance', 'student')]
 test_bs = test[, c('default', 'balance', 'student')]
+
+# train and test sets with student and balance only
+train_is = train[, c('default', 'income', 'student')]
+test_is = test[, c('default', 'income', 'student')]
 ```
 
-In addition, we have created subsets of the training and test sets by only selecting 2 variables each. One subset will have *balance* and *income* as the predictors (BI dataset), while the other subset will have *balance* and *student* (BS dataset).
+In addition, we have created subsets of the training and test sets by only selecting 2 variables each.
 
 These subsets will be trained on SVM using both radial and sigmoid kernels. These models will also be tuned to determine the best parameters (cost and gamma) to be used, to optimize training.
 
+
 ## Balance & Income Dataset
 ### Fitting Train Set with SVM with *Radial* Kernel
-We first work on the dataset with the *balance* and *income* variables. We are ignoring the *student* variable in this case.
 ```{r}
 svm_bi1 = svm(default ~ .,
            data = train_bi,
@@ -73,31 +75,23 @@ tune_out_bi1 = tune(svm,
                  data = train_bi,
                  kernel = 'radial',
                  ranges = list(cost = c(0.1, 1, 10, 100, 1000),
-                               gamma = c(0.5, 1, 2, 3, 4)))
+                               gamma = c(0.5, 1, 2, 3, 4)),
+                 tunecontrol = tune.control(sampling = 'cross',
+                                            cross = 5))
 
 summary(tune_out_bi1)
 ```
 
-After tuning, we discover that the best parameters are cost = 100 and gamma = 1.
+After tuning, we discover that the best parameters are cost = 100 and gamma = 0.5.
+
 
 ```{r}
 bestmod_bi1 = tune_out_bi1$best.model
 summary(bestmod_bi1)
 ```
 
-Number of support vectors have reduced in this case, when cost increased and gamma remains unchanged. This would imply that the margin has reduced.
 
-
-### Confusion Matrices
-```{r}
-# CM on Training Set
-newpred_bi_train1 = predict(bestmod_bi1, train_bi)
-confusionMatrix(table(prediction = newpred_bi_train1,
-                      actual = train_bi$default))
-```
-
-**97.4%** accuracy on training set achieved, which is pretty good.
-
+### Confusion Matrix
 ```{r}
 # CM on Test Set
 newpred_bi_test1 = predict(bestmod_bi1, test_bi)
@@ -107,8 +101,8 @@ confusionMatrix(table(prediction = newpred_bi_test1,
 
 **97.1%** accuracy on test set achieved.
 
+
 ### Fitting Train Set with SVM with *Sigmoid* Kernel
-We now build a SVM with a sigmoid kernel to determine if it is more effective than one with a radial basis kernel.
 ```{r}
 svm_bi2 = svm(default ~ .,
            data = train_bi,
@@ -129,31 +123,23 @@ tune_out_bi2 = tune(svm,
                  data = train_bi,
                  kernel = 'sigmoid',
                  ranges = list(cost = c(0.1, 1, 10, 100, 1000),
-                               gamma = c(0.5, 1, 2, 3, 4)))
+                               gamma = c(0.5, 1, 2, 3, 4)),
+                 tunecontrol = tune.control(sampling = 'cross',
+                                            cross = 5))
 
 summary(tune_out_bi2)
 ```
 
 After tuning, the best parameters are cost = 0.1 and gamma = 0.5.
 
+
 ```{r}
 bestmod_bi2 = tune_out_bi2$best.model
 summary(bestmod_bi2)
 ```
 
-Both cost and gamma parameters have been reduced after tuning, and number of support vectors has increased. There is now a larger margin due to a smaller cost and gamma.
 
-
-### Confusion Matrices
-```{r}
-# CM on Training Set
-newpred_bi_train2 = predict(bestmod_bi2, train_bi)
-confusionMatrix(table(prediction = newpred_bi_train2,
-                      actual = train_bi$default))
-```
-
-Accuracy rate of **95.5%** achieved on training set.
-
+### Confusion Matrix
 ```{r}
 # CM on Test Set
 newpred_bi_test2 = predict(bestmod_bi2, test_bi)
@@ -163,12 +149,9 @@ confusionMatrix(table(prediction = newpred_bi_test2,
 
 Accuracy of **94.8%** achieved on test set.
 
-For this dataset, it is apparent that the SVM with a radial basis kernel has a better performance of 97.1% accuracy.
-
 
 ## Balance & Student Dataset
 ### Fitting Train Set with SVM with *Radial* Kernel
-We now consider the dataset with only the *balance* and *student* variables.
 ```{r}
 svm_bs1 = svm(default ~ .,
            data = train_bs,
@@ -189,31 +172,23 @@ tune_out_bs1 = tune(svm,
                  data = train_bs,
                  kernel = 'radial',
                  ranges = list(cost = c(0.1, 1, 10, 100, 1000),
-                               gamma = c(0.5, 1, 2, 3, 4)))
+                               gamma = c(0.5, 1, 2, 3, 4)),
+                 tunecontrol = tune.control(sampling = 'cross',
+                                            cross = 5))
 
 summary(tune_out_bs1)
 ```
 
-Best parameters are cost = 10 and gamma = 3.
+Best parameters are cost = 1000 and gamma = 1.
+
 
 ```{r}
 bestmod_bs1 = tune_out_bs1$best.model
 summary(bestmod_bs1)
 ```
 
-Number of support vectors have increased tremendously after using a moderate cost and high gamma. There is a much larger margin in this SVM.
 
-
-### Confusion Matrices
-```{r}
-# CM on Training Set
-newpred_bs_train1 = predict(bestmod_bs1, train_bs)
-confusionMatrix(table(prediction = newpred_bs_train1,
-                      actual = train_bs$default))
-```
-
-Accuracy of **97.4%** achieved on training set.
-
+### Confusion Matrix
 ```{r}
 # CM on Test Set
 newpred_bs_test1 = predict(bestmod_bs1, test_bs)
@@ -221,7 +196,7 @@ confusionMatrix(table(prediction = newpred_bs_test1,
                       actual = test_bs$default))
 ```
 
-**97.2%** achieved on test set, which is very close to the performance of the radial basis kernel using the *balance* and *income* dataset.
+Accuracy of **97.2%** achieved on test set.
 
 
 ### Fitting Train Set with SVM with *Sigmoid* Kernel
@@ -245,31 +220,23 @@ tune_out_bs2 = tune(svm,
                  data = train_bs,
                  kernel = 'sigmoid',
                  ranges = list(cost = c(0.1, 1, 10, 100, 1000),
-                               gamma = c(0.5, 1, 2, 3, 4)))
+                               gamma = c(0.5, 1, 2, 3, 4)),
+                 tunecontrol = tune.control(sampling = 'cross',
+                                            cross = 5))
 
 summary(tune_out_bs2)
 ```
 
 Best parameters are cost = 0.1 and gamma = 2.
 
+
 ```{r}
 bestmod_bs2 = tune_out_bs2$best.model
 summary(bestmod_bs2)
 ```
 
-With cost reduced and gamma slightly increased, we now have more support vectors with a larger margin.
 
-
-### Confusion Matrices
-```{r}
-# CM on Training Set
-newpred_bs_train2 = predict(bestmod_bs2, train_bs)
-confusionMatrix(table(prediction = newpred_bs_train2,
-                      actual = train_bs$default))
-```
-
-Accuracy of **96.9%** achieved on training set.
-
+### Confusion Matrix
 ```{r}
 # CM on Test Set
 newpred_bs_test2 = predict(bestmod_bs2, test_bs)
@@ -277,28 +244,216 @@ confusionMatrix(table(prediction = newpred_bs_test2,
                       actual = test_bs$default))
 ```
 
-**96.8%** achieved on test set.
+Accuracy of **96.8%** achieved on test set.
 
-The performance is not very different from that of the radial basis kernel, which suggests that using the *student* variable in analysis greatly helps to predict this binary classification problem.
+
+## Income & Student Dataset
+### Fitting Train Set with SVM with *Radial* Kernel
+```{r}
+svm_is1 = svm(default ~ .,
+           data = train_is,
+           kernel = 'radial',
+           gamma = 1,
+           cost = 1)
+
+summary(svm_is1)
+```
+
+### Tuning of SVM Kernel
+```{r}
+set.seed(111)
+
+tune_out_is1 = tune(svm,
+                 default ~ .,
+                 data = train_is,
+                 kernel = 'radial',
+                 ranges = list(cost = c(0.1, 1, 10, 100, 1000),
+                               gamma = c(0.5, 1, 2, 3, 4)),
+                 tunecontrol = tune.control(sampling = 'cross',
+                                            cross = 5))
+
+summary(tune_out_is1)
+```
+
+Best parameters are cost = 0.1 and gamma = 0.5.
+
+
+```{r}
+bestmod_is1 = tune_out_is1$best.model
+summary(bestmod_is1)
+```
+
+
+### Confusion Matrix
+```{r}
+# CM on Test Set
+newpred_is_test1 = predict(bestmod_is1, test_is)
+confusionMatrix(table(prediction = newpred_is_test1,
+                      actual = test_is$default))
+```
+
+Accuracy of **96.7%** achieved on test set.
+
+
+### Fitting Train Set with SVM with *Sigmoid* Kernel
+```{r}
+svm_is2 = svm(default ~ .,
+           data = train_is,
+           kernel = 'sigmoid',
+           gamma = 1,
+           cost = 1)
+
+summary(svm_is2)
+```
+
+
+### Tuning of SVM Kernel
+```{r}
+set.seed(111)
+
+tune_out_is2 = tune(svm,
+                 default ~ .,
+                 data = train_is,
+                 kernel = 'sigmoid',
+                 ranges = list(cost = c(0.1, 1, 10, 100, 1000),
+                               gamma = c(0.5, 1, 2, 3, 4)),
+                 tunecontrol = tune.control(sampling = 'cross',
+                                            cross = 5))
+
+summary(tune_out_is2)
+```
+
+Best parameters are cost = 0.1 and gamma = 0.5.
+
+
+```{r}
+bestmod_is2 = tune_out_is2$best.model
+summary(bestmod_is2)
+```
+
+
+### Confusion Matrix
+```{r}
+# CM on Test Set
+newpred_is_test2 = predict(bestmod_is2, test_is)
+confusionMatrix(table(prediction = newpred_is_test2,
+                      actual = test_is$default))
+```
+
+Accuracy of **96.7%** achieved on test set.
+
+
+## Full Training Dataset
+### Fitting Train Set with SVM with *Radial* Kernel
+```{r}
+svm_all1 = svm(default ~ .,
+           data = train,
+           kernel = 'radial',
+           gamma = 1,
+           cost = 1)
+
+summary(svm_all1)
+```
+
+
+### Tuning of SVM Kernel
+```{r}
+set.seed(111)
+
+tune_out_all1 = tune(svm,
+                 default ~ .,
+                 data = train,
+                 kernel = 'radial',
+                 ranges = list(cost = c(0.1, 1, 10, 100, 1000),
+                               gamma = c(0.5, 1, 2, 3, 4)),
+                 tunecontrol = tune.control(sampling = 'cross',
+                                            cross = 5))
+
+summary(tune_out_all1)
+```
+
+Best parameters are cost = 10 and gamma = 2.
+
+
+```{r}
+bestmod_all1 = tune_out_all1$best.model
+summary(bestmod_all1)
+```
+
+
+### Confusion Matrix
+```{r}
+# CM on Test Set
+newpred_all_test1 = predict(bestmod_all1, test)
+confusionMatrix(table(prediction = newpred_all_test1,
+                      actual = test$default))
+```
+
+Accuracy of **97.2%** achieved on test set.
+
+
+### Fitting Train Set with SVM with *Sigmoid* Kernel
+```{r}
+svm_all2 = svm(default ~ .,
+           data = train,
+           kernel = 'sigmoid',
+           gamma = 1,
+           cost = 1)
+
+summary(svm_all2)
+```
+
+
+### Tuning of SVM Kernel
+```{r}
+set.seed(111)
+
+tune_out_all2 = tune(svm,
+                 default ~ .,
+                 data = train,
+                 kernel = 'sigmoid',
+                 ranges = list(cost = c(0.1, 1, 10, 100, 1000),
+                               gamma = c(0.5, 1, 2, 3, 4)),
+                 tunecontrol = tune.control(sampling = 'cross',
+                                            cross = 5))
+
+summary(tune_out_all2)
+```
+
+Best parameters are cost = 0.1 and gamma = 0.5.
+
+
+```{r}
+bestmod_all2 = tune_out_all2$best.model
+summary(bestmod_all2)
+```
+
+
+### Confusion Matrix
+```{r}
+# CM on Test Set
+newpred_all_test2 = predict(bestmod_all2, test)
+confusionMatrix(table(prediction = newpred_all_test2,
+                      actual = test$default))
+```
+
+Accuracy of **95.2%** achieved on test set.
 
 
 ## Conclusion
 We compare the best parameters of the tuned models in the following table:
 
-| Best Params | BI (Radial) | BI (Sigmoid) | BS (Radial) | BS (Sigmoid) |
-|-------------|-------------|--------------|-------------|--------------|
-|        Cost |         100 |          0.1 |      **10** |          0.1 |
-|       Gamma |           1 |          0.5 |       **3** |            2 |
-|  No. of SVs |         540 |          521 |     **837** |          533 |
+
+
+
 
 We are aware that the smaller the cost, the larger the margin and the more support vectors there will be. As for gamma, the higher it is, the more it allows the SVM to capture the shape of the data but there might be a risk of overfitting. There is also a large margin in our best model, which would explain the large number of support vectors.
 
 
 We summarize the performances of the SVM kernels in the table below:
 
-| BI (Radial) | BI (Sigmoid) | BS (Radial) | BS (Sigmoid) |
-|-------------|--------------|-------------|--------------|
-|       97.1% |        94.8% |   **97.2%** |        96.8% |
+
+
 
 The radial basis kernel has the better performance as compared to the sigmoid kernel. We also discovered that our accuracy rates are noticeably higher when using the BS dataset, which implies that the *student* variable is a more effective predictor than *income*.
 
