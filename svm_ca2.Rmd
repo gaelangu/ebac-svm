@@ -54,7 +54,7 @@ In addition, we have created subsets of the training and test sets by only selec
 These subsets will be trained on SVM using both radial and sigmoid kernels. These models will also be tuned to determine the best parameters (cost and gamma) to be used, to optimize training.
 
 
-## Balance & Income Dataset
+## Balance & Income Dataset (BI)
 ### Fitting Train Set with SVM with *Radial* Kernel
 ```{r}
 svm_bi1 = svm(default ~ .,
@@ -150,7 +150,7 @@ confusionMatrix(table(prediction = newpred_bi_test2,
 Accuracy of **94.8%** achieved on test set.
 
 
-## Balance & Student Dataset
+## Balance & Student Dataset (BS)
 ### Fitting Train Set with SVM with *Radial* Kernel
 ```{r}
 svm_bs1 = svm(default ~ .,
@@ -247,7 +247,7 @@ confusionMatrix(table(prediction = newpred_bs_test2,
 Accuracy of **96.8%** achieved on test set.
 
 
-## Income & Student Dataset
+## Income & Student Dataset (IS)
 ### Fitting Train Set with SVM with *Radial* Kernel
 ```{r}
 svm_is1 = svm(default ~ .,
@@ -343,7 +343,7 @@ confusionMatrix(table(prediction = newpred_is_test2,
 Accuracy of **96.7%** achieved on test set.
 
 
-## Full Training Dataset
+## Full Training Dataset (ALL)
 ### Fitting Train Set with SVM with *Radial* Kernel
 ```{r}
 svm_all1 = svm(default ~ .,
